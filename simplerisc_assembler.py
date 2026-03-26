@@ -647,19 +647,35 @@ with output_col:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Download (.txt only) ──
+        # ── Downloads (.txt and .hxt) ──
         txt_data  = "PC (Hex)  | Binary                              | Instruction\n"
         txt_data += "-" * 78 + "\n"
         for r in res:
             txt_data += f"{r['PC']:<10}| {r['Binary']:<37}| {r['Instruction']}\n"
 
-        st.download_button(
-            "⬇  Download Output (.txt)",
-            data=txt_data,
-            file_name="machine_code.txt",
-            mime="text/plain",
-            use_container_width=True,
-        )
+        # HXT format: one 8-digit uppercase hex word per line (no spaces/prefix)
+        hxt_data = "\n".join(
+            format(int(r["Binary"].replace(" ", ""), 2), "08X")
+            for r in res
+        ) + "\n"
+
+        dl1, dl2 = st.columns(2)
+        with dl1:
+            st.download_button(
+                "⬇  Download Output (.txt)",
+                data=txt_data,
+                file_name="machine_code.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+        with dl2:
+            st.download_button(
+                "⬇  Download Output (.hxt)",
+                data=hxt_data,
+                file_name="machine_code.hxt",
+                mime="text/plain",
+                use_container_width=True,
+            )
 
     elif not errs:
         st.markdown(
