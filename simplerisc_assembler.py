@@ -652,7 +652,7 @@ with output_col:
 
         # HXT format: one 8-digit uppercase hex word per line (no spaces/prefix)
         hxt_data = "\n".join(
-            format(int(r["Binary"].replace(" ", ""), 2), "08X")
+            r["Binary"].replace(" ", "")
             for r in res
         ) + "\n"
 
