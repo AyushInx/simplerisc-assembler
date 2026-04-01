@@ -238,6 +238,7 @@ OPCODES = {
     'cmp': 5,  'and': 6,  'or': 7,   'not': 8,  'mov': 9,
     'lsl': 10, 'lsr': 11, 'asr': 12, 'nop': 13, 'ld': 14,
     'st': 15,  'beq': 16, 'bgt': 17, 'b': 18,   'call': 19, 'ret': 20,
+    'xor': 21,  # ← 22nd instruction, opcode 10101
 }
 
 MODIFIER_BITS = { '': 0b00, 'u': 0b01, 'h': 0b10 }
@@ -254,17 +255,21 @@ REGISTERS['ra'] = 15
 ISA_TABLE = {
     "Mnemonic": ["add","addu","addh","sub","subu","subh","mul","div","mod",
                  "cmp","and","or","not","mov","movu","movh",
-                 "lsl","lsr","asr","nop","ld","st","beq","bgt","b","call","ret"],
+                 "lsl","lsr","asr","nop","ld","st","beq","bgt","b","call","ret",
+                 "xor"],  # ← added
     "Opcode":   ["00000","00000","00000","00001","00001","00001","00010","00011","00100",
                  "00101","00110","00111","01000","01001","01001","01001",
                  "01010","01011","01100","01101","01110","01111",
-                 "10000","10001","10010","10011","10100"],
+                 "10000","10001","10010","10011","10100",
+                 "10101"],  # ← added
     "Type":     ["ALU","ALU","ALU","ALU","ALU","ALU","ALU","ALU","ALU",
                  "CMP","ALU","ALU","ALU","MOV","MOV","MOV",
-                 "SHIFT","SHIFT","SHIFT","NOP","MEM","MEM","BR","BR","BR","BR","BR"],
+                 "SHIFT","SHIFT","SHIFT","NOP","MEM","MEM","BR","BR","BR","BR","BR",
+                 "ALU"],  # ← added
     "imm[17:16]":["00","01","10","00","01","10","00","00","00",
                   "00","00","00","00","00","01","10",
-                  "00","00","00","—","—","—","—","—","—","—","—"],
+                  "00","00","00","—","—","—","—","—","—","—","—",
+                  "00"],  # ← added
     "Syntax":   ["add rd,rs1,rs2/imm","addu rd,rs1,imm","addh rd,rs1,imm",
                  "sub rd,rs1,rs2/imm","subu rd,rs1,imm","subh rd,rs1,imm",
                  "mul rd,rs1,rs2/imm","div rd,rs1,rs2/imm","mod rd,rs1,rs2/imm",
@@ -273,7 +278,8 @@ ISA_TABLE = {
                  "mov rd,imm (signed)","movu rd,imm (unsigned)","movh rd,imm (<<16)",
                  "lsl rd,rs1,rs2/imm","lsr rd,rs1,rs2/imm","asr rd,rs1,rs2/imm",
                  "nop","ld rd,imm[rs1]","st rd,imm[rs1]",
-                 "beq label","bgt label","b label","call label","ret"],
+                 "beq label","bgt label","b label","call label","ret",
+                 "xor rd,rs1,rs2/imm"],  # ← added
 }
 
 EXAMPLES = {
@@ -352,6 +358,14 @@ movh r1, 0xC3D5     // r1 = 0xC3D50000
 addu r1, r1, 0xA1B2 // r1 = 0xC3D5A1B2
 mov  r2, 0xA1B2     // signed sign-extended
 movu r3, 0xA1B2     // unsigned zero-extended
+nop""",
+
+    "XOR Example": """\
+// XOR instruction example (opcode 10101)
+mov r1, 0b1010   // r1 = 10
+mov r2, 0b1100   // r2 = 12
+xor r3, r1, r2   // r3 = r1 XOR r2 = 0b0110 = 6
+xor r4, r1, 0xFF // r4 = r1 XOR 255 (immediate)
 nop""",
 }
 
@@ -437,6 +451,7 @@ def assemble(src):
                 enc = (opc << 27) | (1 << 26) | (rd << 22) | (rs1 << 18) | (imm & 0x3FFFF)
 
             else:
+                # xor follows same ALU pattern as and/or
                 if op in ('mov', 'not'):
                     rd, rs1, op2 = parse_reg(parts[1]), 0, parts[2]
                 elif op == 'cmp':
@@ -556,7 +571,7 @@ nop"""
         height=400,
         label_visibility="collapsed",
         key=f"asm_editor_{st.session_state['editor_key']}",
-        placeholder="// Assembly code yahan likhein...",
+        placeholder="// Write your assembly program here...",
     )
     st.session_state["code_cache"] = code
 
@@ -670,9 +685,9 @@ with output_col:
             )
         with dl2:
             st.download_button(
-                "⬇  Download Output (.hxt)",
+                "⬇  Download Output (.hex)",
                 data=hxt_data,
-                file_name="machine_code.hxt",
+                file_name="machine_code.hex",
                 mime="text/plain",
                 use_container_width=True,
             )
@@ -695,13 +710,13 @@ st.markdown("---")
 col_isa, col_fmt = st.columns([1, 1], gap="large")
 
 with col_isa:
-    with st.expander("📖  Full ISA Reference — 27 Mnemonics"):
+    with st.expander("📖  Full ISA Reference — 28 Mnemonics"):
         df_isa = pd.DataFrame(ISA_TABLE)
         st.dataframe(
             df_isa,
             use_container_width=True,
             hide_index=True,
-            height=480,
+            height=520,
             column_config={
                 "Mnemonic":   st.column_config.TextColumn("Mnemonic",      width=90),
                 "Opcode":     st.column_config.TextColumn("Opcode (5-bit)", width=110),
@@ -741,6 +756,13 @@ offset = (target_addr - current_pc) / 4
 - `r0 – r13`  general purpose
 - `r14 = sp`  stack pointer
 - `r15 = ra`  return address
+
+**XOR Instruction (new):**
+```
+xor rd, rs1, rs2     → rd = rs1 XOR rs2  (register)
+xor rd, rs1, imm     → rd = rs1 XOR imm  (immediate)
+opcode = 10101  (21)
+```
         """)
 
 st.markdown(
