@@ -2,9 +2,7 @@ import re
 import streamlit as st
 import pandas as pd
 
-# ═══════════════════════════════════════════════════════
 #  PAGE CONFIG
-# ═══════════════════════════════════════════════════════
 st.set_page_config(
     page_title="SimpleRISC Assembler",
     page_icon="🔩",
@@ -12,9 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ═══════════════════════════════════════════════════════
 #  GLOBAL STYLE
-# ═══════════════════════════════════════════════════════
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Unbounded:wght@400;700;900&display=swap');
@@ -202,9 +198,7 @@ p, span, label, div { color: #d4ddf0; }
 </style>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════
 #  LENIS SMOOTH SCROLL
-# ═══════════════════════════════════════════════════════
 st.markdown("""
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script>
@@ -230,9 +224,7 @@ st.markdown("""
 </script>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════
 #  ISA CONFIG
-# ═══════════════════════════════════════════════════════
 OPCODES = {
     'add': 0,  'sub': 1,  'mul': 2,  'div': 3,  'mod': 4,
     'cmp': 5,  'and': 6,  'or': 7,   'not': 8,  'mov': 9,
@@ -370,9 +362,7 @@ nop""",
 }
 
 
-# ═══════════════════════════════════════════════════════
 #  CORE ASSEMBLER
-# ═══════════════════════════════════════════════════════
 def parse_reg(s):
     return REGISTERS.get(s.strip().lower(), 0)
 
@@ -489,11 +479,7 @@ def assemble(src):
 
     return results, errors
 
-
-
-# ═══════════════════════════════════════════════════════
 #  MAIN HEADER
-# ═══════════════════════════════════════════════════════
 st.markdown(
     '<h1 style="font-family:Unbounded,sans-serif;font-size:2.6rem;font-weight:900;'
     'background:linear-gradient(90deg,#3af 0%,#88f 50%,#3fa 100%);'
@@ -508,13 +494,9 @@ st.markdown(
 )
 st.markdown("---")
 
-
-# ═══════════════════════════════════════════════════════
 #  LAYOUT: EDITOR  |  OUTPUT
-# ═══════════════════════════════════════════════════════
 editor_col, output_col = st.columns([1, 1], gap="large")
 
-# ── LEFT: EDITOR ──────────────────────────────────────
 with editor_col:
     st.markdown(
         '<p style="font-family:Space Mono,monospace;font-size:13px;color:#3af;'
@@ -575,7 +557,7 @@ nop"""
     )
     st.session_state["code_cache"] = code
 
-# ── RIGHT: OUTPUT ──────────────────────────────────────
+#  RIGHT: OUTPUT 
 with output_col:
     st.markdown(
         '<p style="font-family:Space Mono,monospace;font-size:13px;color:#8f6;'
@@ -662,7 +644,7 @@ with output_col:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Downloads (.txt and .hxt) ──
+        # ── Downloads (.txt and .hex) ──
         txt_data  = "PC (Hex)  | Binary                              | Instruction\n"
         txt_data += "-" * 78 + "\n"
         for r in res:
@@ -701,10 +683,7 @@ with output_col:
             unsafe_allow_html=True
         )
 
-
-# ═══════════════════════════════════════════════════════
-#  BOTTOM SECTION
-# ═══════════════════════════════════════════════════════
+#  BOTTOM 
 st.markdown("---")
 
 col_isa, col_fmt = st.columns([1, 1], gap="large")
